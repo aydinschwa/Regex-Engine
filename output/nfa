@@ -1,0 +1,45 @@
+// NFA
+digraph {
+	rankdir=LR
+	0 [label="("]
+	1 [label="("]
+	2 [label=A]
+	3 [label="*"]
+	4 [label=B]
+	5 [label="|"]
+	6 [label=A]
+	7 [label=C]
+	8 [label=")"]
+	9 [label=D]
+	10 [label=")"]
+	0 -> 1 [style=invis]
+	1 -> 2 [style=invis]
+	2 -> 3 [style=invis]
+	3 -> 4 [style=invis]
+	4 -> 5 [style=invis]
+	5 -> 6 [style=invis]
+	6 -> 7 [style=invis]
+	7 -> 8 [style=invis]
+	8 -> 9 [style=invis]
+	9 -> 10 [style=invis]
+	2 -> 3
+	4 -> 5
+	6 -> 7
+	7 -> 8
+	9 -> 10
+	0 -> 1 [color=red]
+	2 -> 3 [color=red]
+	3 -> 2 [color=red]
+	7 -> 8 [color=red]
+	9 -> 10 [color=red]
+	0 -> 1 [style=invis]
+	1 -> 2 [style=invis]
+	2 -> 3 [style=invis]
+	3 -> 4 [style=invis]
+	4 -> 5 [style=invis]
+	5 -> 6 [style=invis]
+	6 -> 7 [style=invis]
+	7 -> 8 [style=invis]
+	8 -> 9 [style=invis]
+	9 -> 10 [style=invis]
+}
