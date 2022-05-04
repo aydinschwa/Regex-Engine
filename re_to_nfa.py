@@ -2,7 +2,7 @@ import graphviz as gv
 from collections import defaultdict
 
 
-# build supplemental data structures necessary for visualization with gv
+# build supplemental data structures necessary for visualization with graphviz
 def get_formatting_states(regex):
     states_list = []
     invisible_transitions = []
@@ -32,19 +32,25 @@ def get_epsilon_transitions(regex):
     epsilon_transitions = defaultdict(list)
     operator_idx_stack = []
     for i, unit in enumerate(regex):
+        left_paren_idx = i
         if unit == "(" or unit == "|":
             operator_idx_stack.append(i)
         elif unit == ")":
-            op_idx = operator_idx_stack.pop(-1)
-            if regex[op_idx] == "|":
-                left_paren_idx = operator_idx_stack.pop(-1)
-                epsilon_transitions[left_paren_idx].append(op_idx + 1)
-                epsilon_transitions[op_idx].append(i)
-            else:
-                left_paren_idx = op_idx
+            or_idx_list = []
+            while True:
+                op_idx = operator_idx_stack.pop(-1)
+                if regex[op_idx] == "|":
+                    or_idx_list.append(op_idx)
+                elif regex[op_idx] == "(":
+                    left_paren_idx = op_idx
+                    # epsilon_transitions[left_paren_idx].append(left_paren_idx + 1)
+                    [epsilon_transitions[left_paren_idx].append(or_idx + 1) for or_idx in or_idx_list]
+                    [epsilon_transitions[or_idx].append(i) for or_idx in or_idx_list]
+                    break
+
         if (i < (len(regex) - 1)) and regex[i + 1] == "*":
-            epsilon_transitions[i].append(i + 1)
-            epsilon_transitions[i + 1].append(i)
+            epsilon_transitions[left_paren_idx].append(i + 1)
+            epsilon_transitions[i + 1].append(left_paren_idx)
 
         if unit in "(*)" and i < len(regex) - 1:
             epsilon_transitions[i].append(i + 1)
@@ -54,7 +60,7 @@ def get_epsilon_transitions(regex):
 
 def draw_nfa(gv_states, gv_edges, match_transitions, epsilon_transitions):
     graph = gv.Digraph(comment="NFA")
-    graph.attr(rankdir="LR", ranksep=".2")
+    graph.attr(rankdir="LR", ranksep=".25")
 
     # add states
     [graph.node(str(tup[0]), str(tup[1]), rank="same") for tup in gv_states]
@@ -88,6 +94,7 @@ def draw_nfa(gv_states, gv_edges, match_transitions, epsilon_transitions):
 alphabet = "A B C D".split()
 metacharacters = "( ) . * |".split()
 test_re = "((A*B|AC)D)"
+# test_re = "(A|B|C)"
 
 gv_states, gv_edges = get_formatting_states(test_re)
 match_edge_dict = get_match_transitions(test_re)
