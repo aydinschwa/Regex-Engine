@@ -72,6 +72,11 @@ def digraph_dfs(graph, node):
 def recognize(text, regex, match_transitions, epsilon_transitions, display=False):
     # get epsilon states before scanning first character
     epsilon_states = digraph_dfs(epsilon_transitions, 0)
+
+    # check if nfa has reached an accepting state
+    if len(regex) in epsilon_states:
+        return True
+
     epsilon_chars = [regex[state] for state in epsilon_states]
     for i, letter in enumerate(text):
         # get epsilon transition states that match letter of input text
@@ -145,5 +150,5 @@ def run_test_cases():
 
 
 if __name__ == "__main__":
-    run_test_cases()
-    search("hi there my name is", ".*there.*", display=True)
+    # run_test_cases()
+    search("AAA", "A*", display=True)
