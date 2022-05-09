@@ -1,3 +1,4 @@
 .idea/
 output/nfa.png
 output/nfa
+__pycache__/
