@@ -55,7 +55,7 @@ def digraph_dfs(graph, node):
     reachable_states = []
 
     def find_states(graph, node):
-        if not graph[node]:
+        if node not in graph.keys():
             reachable_states.append(node)
             return
         elif node in reachable_states:
@@ -150,5 +150,5 @@ def run_test_cases():
 
 
 if __name__ == "__main__":
-    # run_test_cases()
+    run_test_cases()
     search("AAA", "A*", display=True)

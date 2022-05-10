@@ -102,7 +102,7 @@ class RegexEngine:
 
     def _draw_nfa(self, active_states, active_match_transitions, active_epsilon_transitions, filename="nfa"):
 
-        graph = gv.Digraph(comment="NFA")
+        graph = gv.Digraph()
         graph.attr(rankdir="LR", ranksep=".25")
 
         # add states
@@ -171,28 +171,40 @@ class RegexEngine:
         graph.render(f"output/{filename}", format="png")
 
     # find all states possible through epsilon transitions
-    #TODO: get appropriate epsilon states and transitions
     @staticmethod
     def _digraph_dfs(graph, node, draw=False):
         reachable_states = []
+        epsilon_arrows = []
 
         def find_states(graph, node):
-            if not graph[node]:
+
+            # base case 1: node has already been visited
+            if node in reachable_states:
+                return
+
+            # base case 2: node has no outgoing edges
+            elif node not in graph.keys():
                 reachable_states.append(node)
                 return
-            elif node in reachable_states:
-                return
+
             else:
                 reachable_states.append(node)
                 for state in graph[node]:
+                    epsilon_arrows.append((node, state))
                     find_states(graph, state)
 
         find_states(graph, node)
-        return reachable_states
+
+        if draw:
+            return epsilon_arrows
+        else:
+            return reachable_states
 
     def search(self, text, filename="nfa_state_"):
+
         # get epsilon states before scanning first character
         epsilon_states = self._digraph_dfs(self.epsilon_transitions, 0)
+        epsilon_arrows = self._digraph_dfs(self.epsilon_transitions, 0, draw=True)
 
         # check if nfa has reached an accepting state
         if len(self.regex) in epsilon_states:
@@ -202,7 +214,7 @@ class RegexEngine:
 
         # graph_state will be the index for keeping pics in order
         graph_state = 0
-        self._draw_nfa(epsilon_states, (), (), filename + str(graph_state))
+        self._draw_nfa(epsilon_states, (), epsilon_arrows, filename + str(graph_state))
         graph_state += 1
 
         for i, letter in enumerate(text):
@@ -221,11 +233,11 @@ class RegexEngine:
             graph_state += 1
 
             # get next epsilon transitions
+            epsilon_states = []
             [epsilon_states.extend(self._digraph_dfs(self.epsilon_transitions, node)) for node in next_states]
 
             epsilon_arrows = []
-            [epsilon_arrows.extend(self._digraph_dfs(self.epsilon_transitions, node, True)) for node in next_states]
-            print(epsilon_arrows)
+            [epsilon_arrows.extend(self._digraph_dfs(self.epsilon_transitions, node, draw=True)) for node in next_states]
 
             self._draw_nfa(epsilon_states, (), epsilon_arrows, filename + str(graph_state))
             graph_state += 1
