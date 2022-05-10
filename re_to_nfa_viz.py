@@ -1,5 +1,7 @@
 import graphviz as gv
 from collections import defaultdict
+import glob
+from PIL import Image
 
 
 class RegexEngine:
@@ -98,7 +100,7 @@ class RegexEngine:
                     epsilon_transitions[tup[0]].append(tup[1])
         return epsilon_transitions
 
-    def _draw_nfa(self, active_states, active_match_transitions, active_epsilon_transitions):
+    def _draw_nfa(self, active_states, active_match_transitions, active_epsilon_transitions, filename="nfa"):
 
         graph = gv.Digraph(comment="NFA")
         graph.attr(rankdir="LR", ranksep=".25")
@@ -106,7 +108,7 @@ class RegexEngine:
         # add states
         for idx, label in self.gv_states:
             if idx in active_states:
-                graph.node(str(idx), str(label), color="black", style="bold")
+                graph.node(str(idx), str(label), color="green", style="filled")
             else:
                 graph.node(str(idx), str(label))
 
@@ -116,7 +118,7 @@ class RegexEngine:
         # add match transition edges
         for tail, head in self.match_transitions.items():
             if (tail, head) in active_match_transitions:
-                graph.edge(str(tail) + ":e", str(head) + ":w", color="black", weight="10", style="bold")
+                graph.edge(str(tail) + ":e", str(head) + ":w", color="black", weight="10", style="bold", arrowsize="1.33")
             else:
                 graph.edge(str(tail) + ":e", str(head) + ":w", color="black", weight="10")
 
@@ -166,11 +168,12 @@ class RegexEngine:
             else:
                 graph.edge(str(tail), str(head), color="red")
 
-        graph.render("output/nfa", format="png")
+        graph.render(f"output/{filename}", format="png")
 
     # find all states possible through epsilon transitions
+    #TODO: get appropriate epsilon states and transitions
     @staticmethod
-    def _digraph_dfs(graph, node):
+    def _digraph_dfs(graph, node, draw=False):
         reachable_states = []
 
         def find_states(graph, node):
@@ -187,10 +190,21 @@ class RegexEngine:
         find_states(graph, node)
         return reachable_states
 
-    def _recognize(self, text, display=False):
+    def search(self, text, filename="nfa_state_"):
         # get epsilon states before scanning first character
         epsilon_states = self._digraph_dfs(self.epsilon_transitions, 0)
+
+        # check if nfa has reached an accepting state
+        if len(self.regex) in epsilon_states:
+            return True
+
         epsilon_chars = [self.regex[state] for state in epsilon_states]
+
+        # graph_state will be the index for keeping pics in order
+        graph_state = 0
+        self._draw_nfa(epsilon_states, (), (), filename + str(graph_state))
+        graph_state += 1
+
         for i, letter in enumerate(text):
             # get epsilon transition states that match letter of input text
             matched_states = []
@@ -201,9 +215,20 @@ class RegexEngine:
             next_states = []
             [next_states.append(self.match_transitions[node]) for node in matched_states]
 
+            # draw match transitions and their associated states
+            match_arrows = list(zip(matched_states, next_states))
+            self._draw_nfa(next_states, match_arrows, (), filename + str(graph_state))
+            graph_state += 1
+
             # get next epsilon transitions
-            epsilon_states = []
             [epsilon_states.extend(self._digraph_dfs(self.epsilon_transitions, node)) for node in next_states]
+
+            epsilon_arrows = []
+            [epsilon_arrows.extend(self._digraph_dfs(self.epsilon_transitions, node, True)) for node in next_states]
+            print(epsilon_arrows)
+
+            self._draw_nfa(epsilon_states, (), epsilon_arrows, filename + str(graph_state))
+            graph_state += 1
 
             # check if nfa has reached an accepting state
             if len(self.regex) in epsilon_states:
@@ -211,22 +236,22 @@ class RegexEngine:
 
             epsilon_chars = [self.regex[state] for state in epsilon_states]
 
-            if display:
-                print(f"States before scanning: {epsilon_states}")
-                print(f"Letter: {letter}")
-                print(f"Matched States: {matched_states}")
-                print(f"Match Transitions: {next_states}")
-                print(f"Epsilon Transitions: {epsilon_states}", end=" ")
-                print()
-
         return False
 
-    def search(self, text, display=False):
+    @staticmethod
+    # https://pythonprogramming.altervista.org/png-to-gif/
+    def convert_to_gif():
+        frames = []
+        imgs = glob.glob("output/*.png")
+        for i in sorted(imgs):
+            new_frame = Image.open(i)
+            frames.append(new_frame)
 
-        if display:
-            self._draw_nfa((), (), ())
-
-        return self._recognize(text, display)
+        # Save into a GIF file that loops forever
+        frames[0].save('png_to_gif.gif', format='GIF',
+                       append_images=frames[1:],
+                       save_all=True,
+                       duration=1000, loop=0)
 
 
 def run_test_cases():
@@ -254,10 +279,12 @@ def run_test_cases():
                   ("hi my name is XÆA-Xii", ".*X...Xii", True)]
 
     for text, regex, answer in test_cases:
-        out = RegexEngine(regex).search(text, display=True)
+        out = RegexEngine(regex).search(text)
         if out != answer:
             print(f"Test case failed: {text}, {regex}")
 
 
 if __name__ == "__main__":
-    RegexEngine("(A|B|C)*AS")
+    # run_test_cases()
+    print(RegexEngine("(A*B|AC)D").search("AABD"))
+    RegexEngine.convert_to_gif()
