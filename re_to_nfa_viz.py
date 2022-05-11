@@ -1,5 +1,6 @@
 import graphviz as gv
 from collections import defaultdict
+import os
 import glob
 from PIL import Image
 
@@ -9,6 +10,7 @@ class RegexEngine:
     def __init__(self, regex):
         # regex must be wrapped in parentheses. If it's already wrapped, an extra layer won't hurt
         self.regex = "(" + regex + ")"
+        self.text = None
         self.metacharacters = "( ) | ? * .".split()
 
         # get formatting states/edges
@@ -21,7 +23,9 @@ class RegexEngine:
         self.epsilon_transitions, self.star_dict, self.closure_dict, self.question_dict, self.next_transition_dict = \
             self._get_epsilon_transitions()
 
-        self._draw_nfa((), (), ())
+        # clear output directory before creating new images
+        files = glob.glob("output/*")
+        [os.remove(file) for file in files]
 
     def _get_formatting_states(self):
         states_list = []
@@ -100,15 +104,33 @@ class RegexEngine:
                     epsilon_transitions[tup[0]].append(tup[1])
         return epsilon_transitions
 
-    def _draw_nfa(self, active_states, active_match_transitions, active_epsilon_transitions, filename="nfa"):
+    def _draw_nfa(self, active_states, active_match_transitions, active_epsilon_transitions, letter_idx, filename="nfa"):
 
         graph = gv.Digraph()
-        graph.attr(rankdir="LR", ranksep=".25")
+
+        if self.text:
+
+            header_text = f'''<<table border="0" cellborder="1" cellspacing="0">
+                              <tr>
+                              <td colspan="{str(len(self.text) + 1)}"><FONT POINT-SIZE="16">Search Text</FONT></td>
+                              </tr>
+                              <tr>'''
+
+            use_text = " " + self.text
+            for i, letter in enumerate(use_text):
+                color = "orange" if letter_idx == i else "white"
+                letter = "   " if letter == " " else letter
+                row_text = f'<td port="p{i}" bgcolor="{color}" colspan="1">{letter}</td>\n'
+                header_text += row_text
+
+            header_text += "</tr></table>>"
+
+            graph.attr(ranksep=".25", rankdir="LR", labelloc="t", fontsize="22", shape="plain", label=header_text)
 
         # add states
         for idx, label in self.gv_states:
             if idx in active_states:
-                graph.node(str(idx), str(label), color="green", style="filled")
+                graph.node(str(idx), str(label), color="green", style="filled", rank="sink")
             else:
                 graph.node(str(idx), str(label))
 
@@ -201,6 +223,7 @@ class RegexEngine:
             return reachable_states
 
     def search(self, text, filename="nfa_state_"):
+        self.text = text
 
         # get epsilon states before scanning first character
         epsilon_states = self._digraph_dfs(self.epsilon_transitions, 0)
@@ -214,10 +237,14 @@ class RegexEngine:
 
         # graph_state will be the index for keeping pics in order
         graph_state = 0
-        self._draw_nfa(epsilon_states, (), epsilon_arrows, filename + str(graph_state))
+        self._draw_nfa(epsilon_states, (), epsilon_arrows, 0, filename + str(graph_state).zfill(3))
         graph_state += 1
 
         for i, letter in enumerate(text):
+            # scan to next letter
+            self._draw_nfa(epsilon_states, (), epsilon_arrows, i + 1, filename + str(graph_state).zfill(3))
+            graph_state += 1
+
             # get epsilon transition states that match letter of input text
             matched_states = []
             [matched_states.append(state) for state, char in zip(epsilon_states, epsilon_chars) if
@@ -229,7 +256,7 @@ class RegexEngine:
 
             # draw match transitions and their associated states
             match_arrows = list(zip(matched_states, next_states))
-            self._draw_nfa(next_states, match_arrows, (), filename + str(graph_state))
+            self._draw_nfa(next_states, match_arrows, (), i + 1, filename + str(graph_state).zfill(3))
             graph_state += 1
 
             # get next epsilon transitions
@@ -239,7 +266,7 @@ class RegexEngine:
             epsilon_arrows = []
             [epsilon_arrows.extend(self._digraph_dfs(self.epsilon_transitions, node, draw=True)) for node in next_states]
 
-            self._draw_nfa(epsilon_states, (), epsilon_arrows, filename + str(graph_state))
+            self._draw_nfa(epsilon_states, (), epsilon_arrows, i + 1, filename + str(graph_state).zfill(3))
             graph_state += 1
 
             # check if nfa has reached an accepting state
