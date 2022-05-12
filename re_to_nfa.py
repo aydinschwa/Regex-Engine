@@ -73,6 +73,10 @@ def recognize(text, regex, match_transitions, epsilon_transitions, display=False
     # get epsilon states before scanning first character
     epsilon_states = digraph_dfs(epsilon_transitions, 0)
 
+    if display:
+        print()
+        print(f"States before scanning: {epsilon_states}")
+
     # check if nfa has reached an accepting state
     if len(regex) in epsilon_states:
         return True
@@ -92,12 +96,6 @@ def recognize(text, regex, match_transitions, epsilon_transitions, display=False
         epsilon_states = []
         [epsilon_states.extend(digraph_dfs(epsilon_transitions, node)) for node in next_states]
 
-        # check if nfa has reached an accepting state
-        if len(regex) in epsilon_states:
-            return True
-
-        epsilon_chars = [regex[state] for state in epsilon_states]
-
         if display:
             print()
             print(f"States before scanning: {epsilon_states}")
@@ -106,6 +104,12 @@ def recognize(text, regex, match_transitions, epsilon_transitions, display=False
             print(f"Match Transitions: {next_states}")
             print(f"Epsilon Transitions: {epsilon_states}", end=" ")
             print()
+
+        # check if nfa has reached an accepting state
+        if len(regex) in epsilon_states:
+            return True
+
+        epsilon_chars = [regex[state] for state in epsilon_states]
 
     return False
 
@@ -144,11 +148,11 @@ def run_test_cases():
                   ("hi my name is XÆA-Xii", ".*X...Xii", True)]
 
     for text, regex, answer in test_cases:
-        out = search(text, regex, display=False)
+        out = search(text, regex)
         if out != answer:
             print(f"Test case failed: {text}, {regex}")
 
 
 if __name__ == "__main__":
-    run_test_cases()
-    search("AAA", "A*", display=True)
+    # run_test_cases()
+    print(search("AAAB", "A*B", display=True))

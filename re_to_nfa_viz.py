@@ -104,7 +104,8 @@ class RegexEngine:
                     epsilon_transitions[tup[0]].append(tup[1])
         return epsilon_transitions
 
-    def _draw_nfa(self, active_states, active_match_transitions, active_epsilon_transitions, letter_idx, filename="nfa"):
+    def _draw_nfa(self, active_states, active_match_transitions, active_epsilon_transitions, letter_idx,
+                  filename="nfa"):
 
         graph = gv.Digraph()
 
@@ -127,6 +128,9 @@ class RegexEngine:
 
             graph.attr(ranksep=".25", rankdir="LR", labelloc="t", fontsize="22", shape="plain", label=header_text)
 
+        else:
+            graph.attr(ranksep=".25", rankdir="LR")
+
         # add states
         for idx, label in self.gv_states:
             if idx in active_states:
@@ -140,7 +144,8 @@ class RegexEngine:
         # add match transition edges
         for tail, head in self.match_transitions.items():
             if (tail, head) in active_match_transitions:
-                graph.edge(str(tail) + ":e", str(head) + ":w", color="black", weight="10", style="bold", arrowsize="1.33")
+                graph.edge(str(tail) + ":e", str(head) + ":w", color="black", weight="10", style="bold",
+                           arrowsize="1.33")
             else:
                 graph.edge(str(tail) + ":e", str(head) + ":w", color="black", weight="10")
 
@@ -264,7 +269,8 @@ class RegexEngine:
             [epsilon_states.extend(self._digraph_dfs(self.epsilon_transitions, node)) for node in next_states]
 
             epsilon_arrows = []
-            [epsilon_arrows.extend(self._digraph_dfs(self.epsilon_transitions, node, draw=True)) for node in next_states]
+            [epsilon_arrows.extend(self._digraph_dfs(self.epsilon_transitions, node, draw=True)) for node in
+             next_states]
 
             self._draw_nfa(epsilon_states, (), epsilon_arrows, i + 1, filename + str(graph_state).zfill(3))
             graph_state += 1
@@ -291,6 +297,9 @@ class RegexEngine:
                        append_images=frames[1:],
                        save_all=True,
                        duration=1000, loop=0)
+
+    def draw_regex(self):
+        self._draw_nfa((), (), (), 0)
 
 
 def run_test_cases():
@@ -325,5 +334,14 @@ def run_test_cases():
 
 if __name__ == "__main__":
     # run_test_cases()
-    print(RegexEngine("(A*B|AC)D").search("AABD"))
-    RegexEngine.convert_to_gif()
+
+    search = True
+
+    # if you want the gif of the NFA scanning through the text, use the following syntax
+    if search:
+        print(RegexEngine("(A*B|AC)D").search("AABD"))
+        RegexEngine.convert_to_gif()
+
+    # if you only want the NFA without searching any text, use the following syntax
+    else:
+        RegexEngine("(A*B|AC)D").draw_regex()
