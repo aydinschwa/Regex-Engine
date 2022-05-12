@@ -20,7 +20,12 @@ class RegexEngine:
         self.match_transitions = self._get_match_transitions()
 
         # epsilon transition edges
-        self.epsilon_transitions, self.star_dict, self.closure_dict, self.question_dict, self.next_transition_dict = \
+        self.epsilon_transitions, \
+            self.star_dict, \
+            self.plus_dict, \
+            self.closure_dict, \
+            self.question_dict, \
+            self.next_transition_dict = \
             self._get_epsilon_transitions()
 
         # clear output directory before creating new images
@@ -59,6 +64,7 @@ class RegexEngine:
         star_dict = {"N": [], "S": []}
         question_dict = {"N": [], "S": []}
         closure_dict = {"(": [], "|": []}
+        plus_dict = {"N": []}
         next_transition_dict = {"next": []}
 
         operator_idx_stack = []
@@ -85,15 +91,19 @@ class RegexEngine:
                 star_dict["N"].append((left_paren_idx, i + 1))
                 star_dict["S"].append((i + 1, left_paren_idx))
 
+            if (i < (len(self.regex) - 1)) and self.regex[i + 1] == "+":
+                plus_dict["N"].append((i + 1, left_paren_idx))
+
             if (i < (len(self.regex) - 1)) and self.regex[i + 1] == "?":
                 question_dict["N"].append((left_paren_idx, i + 2))
 
-            if unit in "(*)?" and i < len(self.regex):
+            if unit in "(*)?+" and i < len(self.regex):
                 next_transition_dict["next"].append((i, i + 1))
 
-        epsilon_transitions = self._combine_epsilon_edges(star_dict, closure_dict, next_transition_dict, question_dict)
+        epsilon_transitions = self._combine_epsilon_edges(star_dict, plus_dict, closure_dict,
+                                                          next_transition_dict, question_dict)
 
-        return epsilon_transitions, star_dict, closure_dict, question_dict, next_transition_dict
+        return epsilon_transitions, star_dict, plus_dict, closure_dict, question_dict, next_transition_dict
 
     @staticmethod
     def _combine_epsilon_edges(*args):
@@ -168,6 +178,13 @@ class RegexEngine:
                 graph.edge(str(tail) + ":sw", str(head) + ":se", color="red", arrowsize="1.33", style="bold")
             else:
                 graph.edge(str(tail) + ":sw", str(head) + ":se", color="red")
+
+        # add + edges
+        for tail, head in self.plus_dict["N"]:
+            if (tail, head) in active_epsilon_transitions:
+                graph.edge(str(tail) + ":nw", str(head) + ":ne", color="red", arrowsize="1.33", style="bold")
+            else:
+                graph.edge(str(tail) + ":nw", str(head) + ":ne", color="red")
 
         # add ? edges
         for tail, head in self.question_dict["N"]:
@@ -302,44 +319,15 @@ class RegexEngine:
         self._draw_nfa((), (), (), 0)
 
 
-def run_test_cases():
-    test_cases = [("Python", "Python", True),
-                  ("Python", "python", False),
-                  # testing single, multiway or
-                  ("Python", "(P|p)ython", True),
-                  ("python", "(P|p)ython", True),
-                  ("cython", "(P|p|c)ython", True),
-                  ("mython", "(P|p|c)ython", False),
-                  # testing *
-                  ("snake", "s*nake", True),
-                  ("ssssnake", "s*nake", True),
-                  ("nake", "s*nake", True),
-                  ("shake", "s*nake", False),
-                  ("Snake", "(Green)*Snake", True),
-                  ("GreenSnake", "(Green)*Snake", True),
-                  # testing ?
-                  ("Smith", "(Doctor)?Smith", True),
-                  ("DoctorSmith", "(Doctor)?Smith", True),
-                  ("DoctorDoctorSmith", "(Doctor)?Smith", False),
-                  # testing .
-                  # doesn't work with metacharacters
-                  ("red orange yellow green", ".*orange.*", True),
-                  ("hi my name is XÆA-Xii", ".*X...Xii", True)]
-
-    for text, regex, answer in test_cases:
-        out = RegexEngine(regex).search(text)
-        if out != answer:
-            print(f"Test case failed: {text}, {regex}")
-
-
 if __name__ == "__main__":
-    # run_test_cases()
 
     search = True
 
     # if you want the gif of the NFA scanning through the text, use the following syntax
     if search:
-        print(RegexEngine("(A*B|AC)D").search("AABD"))
+        print(RegexEngine("S+NAKE").search("SSSSNAKE"))
+
+        # print(RegexEngine("(A*B|AC)D").search("AABD"))
         RegexEngine.convert_to_gif()
 
     # if you only want the NFA without searching any text, use the following syntax

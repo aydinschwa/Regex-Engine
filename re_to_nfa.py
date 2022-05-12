@@ -41,10 +41,13 @@ def get_epsilon_transitions(regex):
             epsilon_transition_dict[left_paren_idx].append(i + 1)
             epsilon_transition_dict[i + 1].append(left_paren_idx)
 
+        if (i < (len(regex) - 1)) and regex[i + 1] == "+":
+            epsilon_transition_dict[i + 1].append(left_paren_idx)
+
         if (i < (len(regex) - 1)) and regex[i + 1] == "?":
             epsilon_transition_dict[left_paren_idx].append(i + 2)
 
-        if unit in "(*)?" and i < len(regex):
+        if unit in "(*)?+" and i < len(regex):
             epsilon_transition_dict[i].append(i + 1)
 
     return epsilon_transition_dict
@@ -145,7 +148,13 @@ def run_test_cases():
                   # testing .
                   # doesn't work with metacharacters
                   ("red orange yellow green", ".*orange.*", True),
-                  ("hi my name is XÆA-Xii", ".*X...Xii", True)]
+                  ("hi my name is XÆA-Xii", ".*X...Xii", True),
+                  # testing +
+                  ("No", "No+", True),
+                  ("Nooooooo", "No+", True),
+                  ("N", "No+", False),
+                  ("NoNoNo", "(No)+", True)
+                  ]
 
     for text, regex, answer in test_cases:
         out = search(text, regex)
@@ -154,5 +163,5 @@ def run_test_cases():
 
 
 if __name__ == "__main__":
-    # run_test_cases()
-    print(search("AAAB", "A*B", display=True))
+    run_test_cases()
+    # print(search("AAAB", "A*B", display=True))
