@@ -251,16 +251,22 @@ class RegexEngine:
         epsilon_states = self._digraph_dfs(self.epsilon_transitions, 0)
         epsilon_arrows = self._digraph_dfs(self.epsilon_transitions, 0, draw=True)
 
-        # check if nfa has reached an accepting state
-        if len(self.regex) in epsilon_states:
-            return True
-
-        epsilon_chars = [self.regex[state] for state in epsilon_states]
-
         # graph_state will be the index for keeping pics in order
         graph_state = 0
         self._draw_nfa(epsilon_states, (), epsilon_arrows, 0, filename + str(graph_state).zfill(3))
         graph_state += 1
+
+        # check if nfa has reached an accepting state
+        if len(self.regex) in epsilon_states:
+            self._draw_nfa([len(self.regex)], (), (), 0, filename + str(graph_state).zfill(3))
+            graph_state += 1
+            self._draw_nfa([len(self.regex)], (), (), 0, filename + str(graph_state).zfill(3))
+            graph_state += 1
+            self._draw_nfa([len(self.regex)], (), (), 0, filename + str(graph_state).zfill(3))
+            graph_state += 1
+            return True
+
+        epsilon_chars = [self.regex[state] for state in epsilon_states]
 
         for i, letter in enumerate(text):
             # scan to next letter
@@ -294,6 +300,12 @@ class RegexEngine:
 
             # check if nfa has reached an accepting state
             if len(self.regex) in epsilon_states:
+                self._draw_nfa([len(self.regex)], (), (), i + 1, filename + str(graph_state).zfill(3))
+                graph_state += 1
+                self._draw_nfa([len(self.regex)], (), (), i + 1, filename + str(graph_state).zfill(3))
+                graph_state += 1
+                self._draw_nfa([len(self.regex)], (), (), i + 1, filename + str(graph_state).zfill(3))
+                graph_state += 1
                 return True
 
             epsilon_chars = [self.regex[state] for state in epsilon_states]
@@ -333,3 +345,4 @@ if __name__ == "__main__":
     # if you only want the NFA without searching any text, use the following syntax
     else:
         RegexEngine("(A*B|AC)D").draw_regex()
+        # RegexEngine(".*AB((C|D*E)F)*G").draw_regex()

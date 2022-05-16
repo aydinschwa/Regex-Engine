@@ -17,6 +17,8 @@ To create the Graphviz animations, you'll need to install it as a Python library
 
 Instructions on how to run the scripts are found in their main functions.
 
+Note that the code for re_to_nfa.py is much cleaner than the visualization script. I had to do some terrible things to get Graphviz to format everything how I wanted it.
+
 
 # References
 I modeled the RE engine after the one presented in Sedgewick and Wayne's [online course](https://www.coursera.org/learn/algorithms-part2) and [textbook](https://algs4.cs.princeton.edu/home/). In fact, the example regex and text in the gif above are taken directly from the excellent NFA Simulation lecture. 
