@@ -9,6 +9,7 @@ This is a regular expression engine that functions by converting a regular expre
   <img src="demo.gif"/>
 </p>
 
+I wrote an article on Medium with a thorough explanation of how the algorithm functions. You can find that [here](https://medium.com/p/e0df447b827a).
 
 # Setup
 There are two distinct scripts you may want to use: re_to_nfa.py and re_to_nfa_viz.py. The former converts regular expressions to NFAs and can search text, while the latter does the same but animates the process.
