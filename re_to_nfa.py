@@ -1,4 +1,37 @@
 from collections import defaultdict
+from collections import deque
+
+
+# splits brace into three tokens: left brace, middle text, right brace
+def process_brace():
+    pass
+
+
+def process_bracket():
+    pass
+
+
+# split regex into tokens corresponding to individual nodes
+def tokenize(regex):
+    regex_symbols = deque(regex)
+    regex_tokens = []
+    while regex_symbols:
+        symbol = regex_symbols.popleft()
+        if symbol == "{":
+            pass
+        elif symbol == "[":
+            regex_tokens.append(symbol)
+            next_symbol = regex_symbols.popleft()
+            bracket_text = []
+            while next_symbol != "]":
+                bracket_text.append(next_symbol)
+                next_symbol = regex_symbols.popleft()
+            bracket_text = "".join(bracket_text)
+            regex_tokens.append(bracket_text)
+            regex_tokens.append(next_symbol)
+        else:
+            regex_tokens.append(symbol)
+    return regex_tokens
 
 
 # build match transition digraph
@@ -6,9 +39,8 @@ def get_match_transitions(regex):
     # create dictionary that can support keys with multiple edges
     match_transitions = defaultdict(list)
     for i, unit in enumerate(regex):
-        if i > 0 and (regex[i - 1].isalpha() or regex[i - 1] == "." or regex[i - 1] == " "):
+        if i > 0 and regex not in metacharacters:
             match_transitions[i - 1].append(i)
-
     return match_transitions
 
 
@@ -47,7 +79,7 @@ def get_epsilon_transitions(regex):
         if (i < (len(regex) - 1)) and regex[i + 1] == "?":
             epsilon_transition_dict[left_paren_idx].append(i + 2)
 
-        if unit in "(*)?+" and i < len(regex):
+        if unit in metacharacters and i < len(regex):
             epsilon_transition_dict[i].append(i + 1)
 
     return epsilon_transition_dict
@@ -88,8 +120,8 @@ def recognize(text, regex, match_transitions, epsilon_transitions, display=False
     for i, letter in enumerate(text):
         # get epsilon transition states that match letter of input text
         matched_states = []
-        [matched_states.append(state) for state, char in zip(epsilon_states, epsilon_chars) if
-         char == letter or char == "."]
+        [matched_states.append(state) for state, char_group in zip(epsilon_states, epsilon_chars) if
+         letter in char_group or char_group == "."]
 
         # take match transition from matched state to next state
         next_states = []
@@ -120,6 +152,7 @@ def recognize(text, regex, match_transitions, epsilon_transitions, display=False
 def search(text, regex, display=False):
     # regex must be wrapped in parentheses. If it's already wrapped, an extra layer won't hurt
     regex = "(" + regex + ")"
+    regex = tokenize(regex)
     match_edge_dict = get_match_transitions(regex)
     epsilon_edge_dict = get_epsilon_transitions(regex)
 
@@ -153,7 +186,11 @@ def run_test_cases():
                   ("No", "No+", True),
                   ("Nooooooo", "No+", True),
                   ("N", "No+", False),
-                  ("NoNoNo", "(No)+", True)
+                  ("NoNoNo", "(No)+", True),
+                  # testing []
+                  ("a", "[abcdefg]", True),
+                  ("c", "[abcdefg]", True),
+                  ("j", "[abcdefg]", False)
                   ]
 
     for text, regex, answer in test_cases:
@@ -163,5 +200,6 @@ def run_test_cases():
 
 
 if __name__ == "__main__":
+    metacharacters = "( ) [ ] { } | ? * +".split()
     run_test_cases()
     # print(search("AAAB", "A*B", display=True))
