@@ -1,5 +1,5 @@
 import graphviz as gv
-from collections import defaultdict
+from collections import defaultdict, deque
 import os
 import glob
 from PIL import Image
@@ -9,9 +9,9 @@ class RegexEngine:
 
     def __init__(self, regex):
         # regex must be wrapped in parentheses. If it's already wrapped, an extra layer won't hurt
-        self.regex = "(" + regex + ")"
+        self.regex = self._tokenize("(" + regex + ")")
         self.text = None
-        self.metacharacters = "( ) | ? * .".split()
+        self.metacharacters = "( ) | ? * + [ ] { }".split()
 
         # get formatting states/edges
         self.gv_states, self.gv_edges = self._get_formatting_states()
@@ -31,6 +31,34 @@ class RegexEngine:
         # clear output directory before creating new images
         files = glob.glob("output/*")
         [os.remove(file) for file in files]
+
+    @staticmethod
+    def _tokenize(regex):
+        regex_symbols = deque(regex)
+        regex_tokens = []
+
+        # splits square bracket into three tokens: left brace, middle text, right brace
+        def process_sq_bracket():
+            regex_tokens.append(symbol)
+            next_symbol = regex_symbols.popleft()
+            bracket_text = []
+            while next_symbol != "]":
+                bracket_text.append(next_symbol)
+                next_symbol = regex_symbols.popleft()
+            bracket_text = "".join(bracket_text)
+            regex_tokens.append(bracket_text)
+            regex_tokens.append(next_symbol)
+
+        while regex_symbols:
+            symbol = regex_symbols.popleft()
+            if symbol == "{":
+                pass
+            elif symbol == "[":
+                process_sq_bracket()
+            else:
+                regex_tokens.append(symbol)
+
+        return regex_tokens
 
     def _get_formatting_states(self):
         states_list = []
@@ -52,7 +80,7 @@ class RegexEngine:
         # create dictionary that can support keys with multiple edges
         match_transitions = {}
         for i, unit in enumerate(self.regex):
-            if i > 0 and (self.regex[i - 1].isalpha() or self.regex[i - 1] == "." or self.regex[i - 1] == " "):
+            if i > 0 and self.regex[i - 1] not in self.metacharacters:
                 match_transitions[i - 1] = i
 
         return match_transitions
@@ -97,7 +125,7 @@ class RegexEngine:
             if (i < (len(self.regex) - 1)) and self.regex[i + 1] == "?":
                 question_dict["N"].append((left_paren_idx, i + 2))
 
-            if unit in "(*)?+" and i < len(self.regex):
+            if unit in self.metacharacters and i < len(self.regex):
                 next_transition_dict["next"].append((i, i + 1))
 
         epsilon_transitions = self._combine_epsilon_edges(star_dict, plus_dict, closure_dict,
@@ -275,8 +303,8 @@ class RegexEngine:
 
             # get epsilon transition states that match letter of input text
             matched_states = []
-            [matched_states.append(state) for state, char in zip(epsilon_states, epsilon_chars) if
-             char == letter or char == "."]
+            [matched_states.append(state) for state, char_group in zip(epsilon_states, epsilon_chars) if
+             letter in char_group or char_group == "."]
 
             # take match transition from matched state to next state
             next_states = []
@@ -337,7 +365,8 @@ if __name__ == "__main__":
 
     # if you want the gif of the NFA scanning through the text, use the following syntax
     if search:
-        print(RegexEngine("S+NAKE").search("SSSSNAKE"))
+        # print(RegexEngine("S+NAKE").search("SSSSNAKE"))
+        print(RegexEngine("[abcdefg]ch").search("ech"))
 
         # print(RegexEngine("(A*B|AC)D").search("AABD"))
         RegexEngine.convert_to_gif()

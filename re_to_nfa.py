@@ -1,34 +1,29 @@
-from collections import defaultdict
-from collections import deque
-
-
-# splits brace into three tokens: left brace, middle text, right brace
-def process_brace():
-    pass
-
-
-def process_bracket():
-    pass
+from collections import defaultdict, deque
 
 
 # split regex into tokens corresponding to individual nodes
 def tokenize(regex):
     regex_symbols = deque(regex)
     regex_tokens = []
+
+    # splits square bracket into three tokens: left brace, middle text, right brace
+    def process_sq_bracket():
+        regex_tokens.append(symbol)
+        next_symbol = regex_symbols.popleft()
+        bracket_text = []
+        while next_symbol != "]":
+            bracket_text.append(next_symbol)
+            next_symbol = regex_symbols.popleft()
+        bracket_text = "".join(bracket_text)
+        regex_tokens.append(bracket_text)
+        regex_tokens.append(next_symbol)
+
     while regex_symbols:
         symbol = regex_symbols.popleft()
         if symbol == "{":
             pass
         elif symbol == "[":
-            regex_tokens.append(symbol)
-            next_symbol = regex_symbols.popleft()
-            bracket_text = []
-            while next_symbol != "]":
-                bracket_text.append(next_symbol)
-                next_symbol = regex_symbols.popleft()
-            bracket_text = "".join(bracket_text)
-            regex_tokens.append(bracket_text)
-            regex_tokens.append(next_symbol)
+            process_sq_bracket()
         else:
             regex_tokens.append(symbol)
     return regex_tokens
