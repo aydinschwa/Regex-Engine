@@ -20,16 +20,53 @@ def tokenize(regex):
             next_symbol = regex_symbols.popleft()
         bracket_text = "".join(bracket_text)
         regex_tokens.append(bracket_text)
+        # add closing squre bracket
         regex_tokens.append(next_symbol)
+
+    # converts repetition counter to series of ? operators
+    # needs to convert match groups like [] and ()
+    def process_curl_bracket():
+        repeat_token = regex_tokens[-1]
+
+        if repeat_token == "]":
+            repeat_token = ["[", regex_tokens[-2], "]"]
+
+        elif repeat_token == ")":
+            match_group = deque()
+            for token in reversed(regex_tokens):
+                if token == "(":
+                    match_group.appendleft(token)
+                    break
+                match_group.appendleft(token)
+            repeat_token = list(match_group)
+
+        # otherwise, repeat token will just be a letter/number
+        else:
+            repeat_token = [repeat_token]
+
+        # get number representing minimum number of repetitions
+        min_reps = int(regex_symbols.popleft())
+        regex_symbols.popleft()  # pop comma
+        regex_symbols.popleft()  # pop space
+        # get number representing max number of repetitions
+        max_reps = int(regex_symbols.popleft())
+
+        # adding text and ? tokens where necessary
+        [regex_tokens.extend(repeat_token) for _ in range(min_reps - 1)]
+        [regex_tokens.extend(repeat_token + ["?"]) for _ in range(max_reps - min_reps)]
+
+        # remove the rightmost curly bracket
+        regex_symbols.popleft()
 
     while regex_symbols:
         symbol = regex_symbols.popleft()
         if symbol == "{":
-            pass
+            process_curl_bracket()
         elif symbol == "[":
             process_sq_bracket()
         else:
             regex_tokens.append(symbol)
+
     return regex_tokens
 
 
@@ -186,7 +223,6 @@ def run_test_cases():
                   ("DoctorSmith", "(Doctor)?Smith", True),
                   ("DoctorDoctorSmith", "(Doctor)?Smith", False),
                   # testing .
-                  # doesn't work with metacharacters
                   ("red orange yellow green", ".*orange.*", True),
                   ("hi my name is XÆA-Xii", ".*X...Xii", True),
                   # testing +
@@ -201,7 +237,13 @@ def run_test_cases():
                   # testing -
                   ("Ant8", "[A-Z]nt[0-9]", True),
                   ("Mnt0", "[A-Z]nt[0-9]", True),
-                  ("ant8", "[A-Z]nt[0-9]", False)
+                  ("ant8", "[A-Z]nt[0-9]", False),
+                  # testing {}
+                  ("Happy Days", "Hap{2, 7}y Days", True),
+                  ("Happppppy Days", "Hap{2, 7}y Days", True),
+                  ("Happppppy Days", "Hap{2, 4}y Days", False),
+                  ("NBA", "[BAN]{2, 3}", True),
+                  ("wormwoodwormwoooood", "(wormwo+d){2, 4}", True)
                   ]
 
     for text, regex, answer in test_cases:
@@ -213,4 +255,4 @@ def run_test_cases():
 if __name__ == "__main__":
     metacharacters = "( ) [ ] { } | ? * +".split()
     run_test_cases()
-   # print(search("AD22", "A[D-Z0-9]", display=False))
+    #print(search("AAA", "F{2, 4}", display=False))
