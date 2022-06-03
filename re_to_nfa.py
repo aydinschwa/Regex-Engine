@@ -1,6 +1,10 @@
 from collections import defaultdict, deque
 
 
+def text_range(start, stop):
+    return "".join([chr(num) for num in range(ord(start), ord(stop) + 1)])
+
+
 # split regex into tokens corresponding to individual nodes
 def tokenize(regex):
     regex_symbols = deque(regex)
@@ -115,8 +119,16 @@ def recognize(text, regex, match_transitions, epsilon_transitions, display=False
     for i, letter in enumerate(text):
         # get epsilon transition states that match letter of input text
         matched_states = []
-        [matched_states.append(state) for state, char_group in zip(epsilon_states, epsilon_chars) if
-         letter in char_group or char_group == "."]
+        for state, char_group in zip(epsilon_states, epsilon_chars):
+            if letter in char_group or "." in char_group:
+                matched_states.append(state)
+            elif "-" in char_group:
+                ranges = ""
+                for i, char in enumerate(char_group):
+                    if char == "-":
+                        ranges += text_range(char_group[i - 1], char_group[i + 1])
+                if letter in ranges:
+                    matched_states.append(state)
 
         # take match transition from matched state to next state
         next_states = []
@@ -185,7 +197,11 @@ def run_test_cases():
                   # testing []
                   ("a", "[abcdefg]", True),
                   ("c", "[abcdefg]", True),
-                  ("j", "[abcdefg]", False)
+                  ("j", "[abcdefg]", False),
+                  # testing -
+                  ("Ant8", "[A-Z]nt[0-9]", True),
+                  ("Mnt0", "[A-Z]nt[0-9]", True),
+                  ("ant8", "[A-Z]nt[0-9]", False)
                   ]
 
     for text, regex, answer in test_cases:
@@ -197,4 +213,4 @@ def run_test_cases():
 if __name__ == "__main__":
     metacharacters = "( ) [ ] { } | ? * +".split()
     run_test_cases()
-    # print(search("AAAB", "A*B", display=True))
+   # print(search("AD22", "A[D-Z0-9]", display=False))
