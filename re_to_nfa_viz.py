@@ -408,12 +408,12 @@ class RegexEngine:
 
 if __name__ == "__main__":
 
-    search = False
+    search = True
 
     # if you want the gif of the NFA scanning through the text, use the following syntax
     if search:
-        # print(RegexEngine("S+NAKE").search("SSSSNAKE"))
-        print(RegexEngine("[a-z]{2, 3}ch").search("ech"))
+        print(RegexEngine("S+NAKE").search("SSSSNAKE"))
+        # print(RegexEngine("[a-z]{2, 3}ch").search("ech"))
 
         # print(RegexEngine("(A*B|AC)D").search("AABD"))
         RegexEngine.convert_to_gif()
