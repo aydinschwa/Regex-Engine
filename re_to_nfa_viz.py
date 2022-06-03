@@ -60,6 +60,10 @@ class RegexEngine:
 
         return regex_tokens
 
+    @staticmethod
+    def _text_range(start, stop):
+        return "".join([chr(num) for num in range(ord(start), ord(stop) + 1)])
+
     def _get_formatting_states(self):
         states_list = []
         invisible_transitions = []
@@ -303,8 +307,16 @@ class RegexEngine:
 
             # get epsilon transition states that match letter of input text
             matched_states = []
-            [matched_states.append(state) for state, char_group in zip(epsilon_states, epsilon_chars) if
-             letter in char_group or char_group == "."]
+            for state, char_group in zip(epsilon_states, epsilon_chars):
+                if letter in char_group or "." in char_group:
+                    matched_states.append(state)
+                elif "-" in char_group:
+                    ranges = ""
+                    for i, char in enumerate(char_group):
+                        if char == "-":
+                            ranges += self._text_range(char_group[i - 1], char_group[i + 1])
+                    if letter in ranges:
+                        matched_states.append(state)
 
             # take match transition from matched state to next state
             next_states = []
@@ -366,7 +378,7 @@ if __name__ == "__main__":
     # if you want the gif of the NFA scanning through the text, use the following syntax
     if search:
         # print(RegexEngine("S+NAKE").search("SSSSNAKE"))
-        print(RegexEngine("[abcdefg]ch").search("ech"))
+        print(RegexEngine("[a-z]ch").search("ech"))
 
         # print(RegexEngine("(A*B|AC)D").search("AABD"))
         RegexEngine.convert_to_gif()
