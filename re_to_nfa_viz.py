@@ -49,10 +49,45 @@ class RegexEngine:
             regex_tokens.append(bracket_text)
             regex_tokens.append(next_symbol)
 
+        # converts repetition counter to series of ? operators
+        # needs to convert match groups like [] and ()
+        def process_curl_bracket():
+            repeat_token = regex_tokens[-1]
+
+            if repeat_token == "]":
+                repeat_token = ["[", regex_tokens[-2], "]"]
+
+            elif repeat_token == ")":
+                match_group = deque()
+                for token in reversed(regex_tokens):
+                    if token == "(":
+                        match_group.appendleft(token)
+                        break
+                    match_group.appendleft(token)
+                repeat_token = list(match_group)
+
+            # otherwise, repeat token will just be a letter/number
+            else:
+                repeat_token = [repeat_token]
+
+            # get number representing minimum number of repetitions
+            min_reps = int(regex_symbols.popleft())
+            regex_symbols.popleft()  # pop comma
+            regex_symbols.popleft()  # pop space
+            # get number representing max number of repetitions
+            max_reps = int(regex_symbols.popleft())
+
+            # adding text and ? tokens where necessary
+            [regex_tokens.extend(repeat_token) for _ in range(min_reps - 1)]
+            [regex_tokens.extend(repeat_token + ["?"]) for _ in range(max_reps - min_reps)]
+
+            # remove the rightmost curly bracket
+            regex_symbols.popleft()
+
         while regex_symbols:
             symbol = regex_symbols.popleft()
             if symbol == "{":
-                pass
+                process_curl_bracket()
             elif symbol == "[":
                 process_sq_bracket()
             else:
@@ -373,17 +408,17 @@ class RegexEngine:
 
 if __name__ == "__main__":
 
-    search = True
+    search = False
 
     # if you want the gif of the NFA scanning through the text, use the following syntax
     if search:
         # print(RegexEngine("S+NAKE").search("SSSSNAKE"))
-        print(RegexEngine("[a-z]ch").search("ech"))
+        print(RegexEngine("[a-z]{2, 3}ch").search("ech"))
 
         # print(RegexEngine("(A*B|AC)D").search("AABD"))
         RegexEngine.convert_to_gif()
 
     # if you only want the NFA without searching any text, use the following syntax
     else:
-        RegexEngine("(A*B|AC)D").draw_regex()
+        RegexEngine("[AB]{2, 3}").draw_regex()
         # RegexEngine(".*AB((C|D*E)F)*G").draw_regex()
