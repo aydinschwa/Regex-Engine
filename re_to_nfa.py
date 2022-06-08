@@ -47,7 +47,6 @@ def tokenize(regex):
         # get number representing minimum number of repetitions
         min_reps = int(regex_symbols.popleft())
         regex_symbols.popleft()  # pop comma
-        regex_symbols.popleft()  # pop space
         # get number representing max number of repetitions
         max_reps = int(regex_symbols.popleft())
 
@@ -104,6 +103,9 @@ def get_epsilon_transitions(regex):
                     [epsilon_transition_dict[or_idx].append(i) for or_idx in or_idx_list]
 
                     break
+
+        elif unit == "]":
+            left_paren_idx = i - 2
 
         if (i < (len(regex) - 1)) and regex[i + 1] == "*":
             epsilon_transition_dict[left_paren_idx].append(i + 1)
@@ -234,16 +236,17 @@ def run_test_cases():
                   ("a", "[abcdefg]", True),
                   ("c", "[abcdefg]", True),
                   ("j", "[abcdefg]", False),
+                  ("abc", "[abcdefg]+", True),
                   # testing -
                   ("Ant8", "[A-Z]nt[0-9]", True),
                   ("Mnt0", "[A-Z]nt[0-9]", True),
                   ("ant8", "[A-Z]nt[0-9]", False),
                   # testing {}
-                  ("Happy Days", "Hap{2, 7}y Days", True),
-                  ("Happppppy Days", "Hap{2, 7}y Days", True),
-                  ("Happppppy Days", "Hap{2, 4}y Days", False),
-                  ("NBA", "[BAN]{2, 3}", True),
-                  ("wormwoodwormwoooood", "(wormwo+d){2, 4}", True)
+                  ("Happy Days", "Hap{2,7}y Days", True),
+                  ("Happppppy Days", "Hap{2,7}y Days", True),
+                  ("Happppppy Days", "Hap{2,4}y Days", False),
+                  ("NBA", "[BAN]{2,3}", True),
+                  ("wormwoodwormwoooood", "(wormwo+d){2,4}", True)
                   ]
 
     for text, regex, answer in test_cases:

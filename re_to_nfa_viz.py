@@ -154,6 +154,9 @@ class RegexEngine:
                         [closure_dict["|"].append((or_idx, i)) for or_idx in or_idx_list]
                         break
 
+            elif unit == "]":
+                left_paren_idx = i - 2
+
             if (i < (len(self.regex) - 1)) and self.regex[i + 1] == "*":
                 star_dict["N"].append((left_paren_idx, i + 1))
                 star_dict["S"].append((i + 1, left_paren_idx))
@@ -412,7 +415,8 @@ if __name__ == "__main__":
 
     # if you want the gif of the NFA scanning through the text, use the following syntax
     if search:
-        print(RegexEngine("S+NAKE").search("SSSSNAKE"))
+        # print(RegexEngine("S+NAKE").search("SSSSNAKE"))
+        print(RegexEngine("[abc]+").search("abcabc"))
         # print(RegexEngine("[a-z]{2, 3}ch").search("ech"))
 
         # print(RegexEngine("(A*B|AC)D").search("AABD"))
