@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Regex NFA Visualizer</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://unpkg.com/viz.js@2.1.2/viz.js"></script>
+    <script src="https://unpkg.com/viz.js@2.1.2/full.render.js"></script>
+  </head>
+  <body>
+    <main class="page">
+      <header class="header">
+        <div>
+          <p class="eyebrow">Regex Engine</p>
+          <h1>Regex NFA Visualizer</h1>
+          <p class="subhead">
+            Convert a regular expression to an NFA and step through the match process in the browser.
+          </p>
+        </div>
+        <div class="legend">
+          <div><span class="swatch active"></span> Active states <span class="count" id="legendActiveCount">0</span></div>
+          <div><span class="swatch match"></span> Match transitions <span class="count" id="legendMatchCount">0</span></div>
+          <div><span class="swatch epsilon"></span> Epsilon transitions <span class="count" id="legendEpsilonCount">0</span></div>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="inputs">
+          <label>
+            <span>Regex</span>
+            <input id="regexInput" type="text" value="(P|p)ython" />
+          </label>
+          <label>
+            <span>Text</span>
+            <input id="textInput" type="text" value="Python" />
+          </label>
+        </div>
+        <div class="controls">
+          <button id="renderBtn">Render NFA</button>
+          <button id="runBtn">Run Search</button>
+          <button id="prevBtn">Prev</button>
+          <button id="playBtn">Play</button>
+          <button id="nextBtn">Next</button>
+        </div>
+        <div class="timeline">
+          <input id="stepSlider" type="range" min="0" max="0" value="0" />
+          <div class="status" id="statusText">Ready.</div>
+        </div>
+      </section>
+
+      <section class="graph" id="graph"></section>
+      <section class="details">
+        <div class="detail-card">
+          <h3>Step Explanation</h3>
+          <p id="explanationText">Ready.</p>
+        </div>
+        <div class="detail-card">
+          <h3>Active States</h3>
+          <p id="details"></p>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

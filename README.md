@@ -12,13 +12,17 @@ This is a regular expression engine that functions by converting a regular expre
 I wrote an article on Medium with a thorough explanation of how the algorithm functions. You can find that [here](https://medium.com/p/e0df447b827a).
 
 # Setup
-There are two distinct scripts you may want to use: re_to_nfa.py and re_to_nfa_viz.py. The former converts regular expressions to NFAs and can search text, while the latter does the same but animates the process.
+The original Python implementation now lives in `python/`:
 
-To create the Graphviz animations, you'll need to install it as a Python library (pip install graphviz) and [directly onto your computer](https://www.graphviz.org/download/). 
+- `python/re_to_nfa.py` converts regular expressions to NFAs and can search text.
+- `python/re_to_nfa_viz.py` animates the process with Graphviz.
+
+To create the Graphviz animations, you'll need to install Graphviz as a Python library (`pip install graphviz`) and [directly onto your computer](https://www.graphviz.org/download/).
 
 Instructions on how to run the scripts are found in their main functions.
 
-Note that the code for re_to_nfa.py is much cleaner than the visualization script. I had to do some terrible things to get Graphviz to format everything how I wanted it.
+## Browser Demo
+An interactive browser version lives in `web/`. Open `web/index.html` in a browser to explore the NFA and step through a match.
 
 
 # References
